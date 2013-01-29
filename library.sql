@@ -1,5 +1,6 @@
 create table books (
     id integer primary key,
+    bookname    text,
     author      text,
     price       text,
     publisher   text,
@@ -7,5 +8,6 @@ create table books (
     isbn        text,
     sortnum     text,
     pages       integer,
-    pubdate     text
+    pubdate     text,
+    reno        integer
 );
