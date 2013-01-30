@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import BeautifulSoup
+import urllib2
+import time
 
 infos = [
         u'索书号',
@@ -27,23 +29,32 @@ infoInsertScript = """insert into bookInfo (
         commit_time,
         alt_time) values( ?,?,?,?,?,?,?,?,?,?,? )"""
 
-bookInfo = {}
 
 LEN = len( infos )
+page = urllib2.urlopen( 'http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno=188' )
 
 soup = BeautifulSoup.BeautifulSoup( page )
+print 'done'
+print time.time()
 
 def digInfo( soup ):
+    bookInfo = {}
     tbody = soup.fetch( 'tbody' )
     if len( tbody ) > 1:
-        print 'alert: no only a table',num
+        print 'alert: no only a table'
         return
-    trs = tbody.fetch('tr')
-    for i in range( LEN ):
-        t = trs[i]
-        bookInfo[infos[i]] = t.next.next
+    trs = tbody[0].fetch('tr')
+    for tr in trs:
+        tds = tr.fetch('td')
+        for i in range( LEN ):
+            bookInfo[ infos[i] ] = tds[i].next
+    return bookInfo
 
-def BKInfoCommitter( libCon, infolist ):
-    for info in infolist:
+def main():
+    _info = digInfo( soup )
+    for i in _info:
+        print i,_info[i]
+    print time.time()
 
-        libCon.execute()
+if __name__ == '__main__':
+    main()
