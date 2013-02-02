@@ -3,7 +3,32 @@
 import urllib2
 import BeautifulSoup as bs
 
-def getSoup( url ):
-    page = urllib2.urlopen( url )
-    soup = bs.BeautifulSoup( page )
-    return soup
+class getSoup:
+    """docstring for getSoup"""
+    def __init__(self, num):
+        base = 'http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno='
+        self.url = base + str(num)
+        self.soup = self.getSoup()
+
+    def curl(self):
+        attempts = 0
+        page = False
+        while attempts < 10:
+            try:
+                page = urllib2.urlopen(self.url)
+                break
+            except:
+                attempts += 1
+        print attempts,
+        return page
+
+    def getSoup(self):
+        page = self.curl()
+        if not page:
+            return None
+        try:
+            soup = bs.BeautifulSoup( page )
+            return soup
+        except TypeError:
+            print 'type error'
+            return None
