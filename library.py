@@ -11,8 +11,8 @@ import data
 
 __INFO__ = 0
 __STORE__ = 1
-__STEP__ = 10
-__CHUNK__ = 5
+__STEP__ = 10000
+__CHUNK__ = 50
 
 class library:
     """docstring for library"""
@@ -24,7 +24,9 @@ class library:
         self.beg_time = time.time()
         self.last_time = self.beg_time
         self.total = {'commit':0,'fail':0}
-        self.booklist = [ [], [] ]     # booklist[0] contain basic info, booklist[1] contain store info
+        # booklist[0] contain basic info, booklist[1] contain store info
+        self.booklist = [ [], [] ]
+
         self.info_entries = data.info_entries
         self.info_script = data.info_script
         self.store_entries = data.store_entries
@@ -43,6 +45,7 @@ class library:
         _max = self.db_con.execute( _script ).fetchone()[0]
         if not _max:
             _max = 1
+        print 'find the max',_max
         return _max
 
     def get_lowest(self,lst):
@@ -78,9 +81,7 @@ class library:
         self.commit2db()
         l = len( _bl )
         print '>>commit!(',l,'books )'
-        print time.ctime()
-        print 'total commit',self.total['commit']
-        print 'total failed',self.total['fail']
+        self.state()
         print 'since last time', time.time() - self.last_time,'s'
 
         self.last_time = time.time()
@@ -159,12 +160,20 @@ class library:
             store_list.append( store)
         return store_list
 
+    def state(self):
+        print 'total commit:',self.total['commit']
+        print 'total failed:',self.total['fail']
+        print '-'*35
+
     def start(self):
-        for i in self.region:
-            _soupJar = getSoup(i).soupJar
+        size = len( self.region )
+        print 'will process',size,'books'
+        for i in range(size):
+            seed = self.region[i]
+            _soupJar = getSoup(seed).soupJar
             if not _soupJar:
                 # handle error page
-                self.total_fail += 1
+                self.total['fail'] += 1
                 continue
             info = self.basic_parser(_soupJar)
             store = self.storeparser(_soupJar)
@@ -172,6 +181,7 @@ class library:
             self.booklist[__STORE__].append(store)
             if i % __CHUNK__ == 0:
                 self.commit()
+        self.state()
 
 def main():
     beg = time.time()
