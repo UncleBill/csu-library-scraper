@@ -3,12 +3,13 @@
 import urllib2
 import BeautifulSoup as bs
 
-class getSoup:
+class getSoup():
     """docstring for getSoup"""
     def __init__(self, num):
         base = 'http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno='
+        self.num = num
         self.url = base + str(num)
-        self.soup = self.getSoup()
+        self.soupJar = self.getSoup()
 
     def curl(self):
         attempts = 0
@@ -19,7 +20,6 @@ class getSoup:
                 break
             except:
                 attempts += 1
-        print attempts,
         return page
 
     def getSoup(self):
@@ -28,7 +28,7 @@ class getSoup:
             return None
         try:
             soup = bs.BeautifulSoup( page )
-            return soup
+            return [soup, self.num]
         except TypeError:
             print 'type error'
             return None
