@@ -33,7 +33,7 @@ create table bookInfos (
 create trigger add_time after
 insert on bookInfos
 begin
-    insert into bookInfos ( commit_time ) values ( date(now) );
+    insert into bookInfos ( commit_time ) values ( date('now') );
 end;
 
 --create trigger update_time after
