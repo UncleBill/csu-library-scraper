@@ -13,12 +13,16 @@ from threading import Thread
 from Queue import Queue
 from time import sleep
 
-begSec =  time.time()
+from digInfoClass import digInfos
+
+begSec = time.time()
 lastTime = begSec
+infoInsertScript = digInfos.infoInsertScript
+entries = digInfos.entries
 
 BASE = 'http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno='
-CHUNK = 20     # commit every $CHUNK books
-step = 1000     # handle $step books
+CHUNK = 100     # commit every $CHUNK books
+step = 10000     # handle $step books
 libConn = sqlite3.connect('lib.db')
 jobQueue = Queue()
 ThreadNum = 10
@@ -26,30 +30,42 @@ totalFaileds = 0
 totalCommit = 0
 booklist = []
 
-print 'ThreadNum:',ThreadNum
+
+print 'ThreadNum:', ThreadNum
 print begSec
 
 gt = time.gmtime()
 urlopener = urllib2.urlopen
 
-def curl( num ):
+
+def curl(num):
     attempts = 0
     page = False
-    url  = BASE + str( num )
+    url = BASE + str(num)
     while attempts < 10:
         try:
             #page = urlopener( url,timeout=20 )
-            page = urlopener( url )
+            page = urlopener(url)
             break
-        except :
+        except:
             attempts += 1
     print attempts,
-    return {'page':page,'num':num}
+    return {'page': page, 'num':num}
 
-def nobook( num ,errstr=None ):
+def nobook( num, errstr=None ):
     print '!e',num,errstr
 
-insertScript = u"""insert into books (bookname, author, price, publisher,callnum,isbn, sortnum, pages, pubdate, reno ) values ( ?,?,?,?,?,?,?,?,?,? )"""
+insertScript = u"""insert into books (
+    bookname,
+    author,
+    price,
+    publisher,
+    callnum,
+    isbn,
+    sortnum,
+    pages,
+    pubdate,
+    reno ) values ( ?,?,?,?,?,?,?,?,?,? )"""
 
 keyslit = [ u'书名',u'作者',u'价格',u'出版者',u'索书号',u'ISBN',u'分类号',u'页数',u'出版日期',u'RENO' ]
 
@@ -58,27 +74,22 @@ def pageParser( pg ):
     global totalFaileds
     page, num = pg['page'], pg['num']
     book = {}
-    isFail = False
     if not page:
         totalFaileds += 1
-        isFail = True
-        #return
+        return
     try:
         soup = BS.BeautifulSoup( page )
         info = soup.findAll( 'div','info' )   # get name of book
     except TypeError:
         print ''
-        info = [1]
-        #return
-
-    if len( info ) < 2 or isFail:                 # book doesn't exist
+        return
+    infos_list = digInfos( soup ).infos
+    if len( info ) < 2:                 # book doesn't exist
         nobook( num, 'There is not this book.Set to None' )
         kl = keyslit
         for k in kl:
             book[k] = u''
         book[u'书名'] = u'No existing!'
-        if isFail:
-            book[u'书名'] = u'No existing!:HTTPError'
         book[u'RENO'] = num
         booklist.append( book )
         return
@@ -97,18 +108,25 @@ def pageParser( pg ):
         value = str( t )
         book[name] = value.decode('utf-8')
     book[u'RENO'] = num
+    for infos in infos_list:
+        infos[u'RECNO']=num
 
+    book[u'info'] = infos_list
     print '#',
     booklist.append( book )
 
-def dbCommitter( connect,booklist,kl=keyslit,script=insertScript ):   # book is data
+def dbCommitter( connect,booklist ):   # book is data
     conn = connect
-    datalist = booklist
+    kl = keyslit
 
-    for item in datalist:
-        keystuple = tuple(  item[i] for i in kl )
-
-        conn.execute( script,keystuple )
+    for item in booklist:
+        keys_tuple = tuple(  item[i] for i in kl )
+        conn.execute( insertScript ,keys_tuple )
+        _infos_list = item[u'info']
+        for _i in _infos_list:
+            print _i[u'RECNO']
+            info_value_tuple = tuple( _i[i] for i in entries )
+            conn.execute( infoInsertScript,info_value_tuple )
     conn.commit()
 
 def committer():
@@ -130,7 +148,6 @@ def committer():
     print 'total failed',totalFaileds
     print 'since last time', time.time() - lastTime
     lastTime = time.time()
-    print '-'*30
 
 def worker():
     while True:
@@ -146,9 +163,13 @@ for i in range( ThreadNum ):
 
 def getMax( dbcon, rec = 'reno'):
     max = dbcon.execute( 'select max(reno) from books' ).fetchone()[0]
+    if not max:
+        max = 0
     return max
 
 def getLowest(lst):
+    if len( lst ) == 0:
+        return 0
     for i in range( len(lst)-1 ):
         if lst[i+1] - lst[i] > 1:
             print 'lowest:',lst[i]
@@ -174,7 +195,7 @@ def getFail():              # get failed items, ignore $ignore
 rs = getMax( libConn ) + 1
 region = getFail()
 region.sort()
-#region.extend( range( rs,rs + step,1 ) )
+region.extend( range( rs,rs + step,1 ) )
 print 'will fetch and process ', len( region ), 'pages'
 
 for i in range( len( region ) ):
