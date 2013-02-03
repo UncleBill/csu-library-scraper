@@ -12,7 +12,7 @@ import data
 
 __INFO__ = 0
 __STORE__ = 1
-__STEP__ = 20000
+__STEP__ = 5000
 __CHUNK__ = 50
 
 class library:
@@ -119,20 +119,22 @@ class library:
             seed = self.region[i]
             _soupJar = getSoup(seed).soupJar
             if not _soupJar:
+                info, store = {}, {}
                 # TODO handle error page
-                #for i in basic_entires:
-                    #info[i] = 'FAIL_PAGE'
-                #for i in store_entries:
-                    #store[i] = 'FAIL_PAGE'
+                #for _i in self.info_entries:
+                    #info[_i] = 'FAIL_PAGE'
+                #for _i in self.store_entries:
+                    #store[_i] = 'FAIL_PAGE'
 
                 #store[u'RECNO'] = info[u'RECNO'] = seed
                 #self.booklist[__INFO__].append(info)
                 #self.booklist[__STORE__].append([store])
 
                 self.total['fail'] += 1
+                continue
             else:
-                info = parser.basic_parser(_soupJar)
-                store = parser.store_parser(_soupJar)
+                info = parser().basic_parser(_soupJar)
+                store = parser().store_parser(_soupJar)
                 self.booklist[__INFO__].append(info)
                 self.booklist[__STORE__].append(store)
             if i % __CHUNK__ == 0:
