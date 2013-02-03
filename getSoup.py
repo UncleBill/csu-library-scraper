@@ -3,7 +3,7 @@
 import urllib2
 import BeautifulSoup as bs
 
-__TRY__ = 10
+__TRY__ = 3
 
 class getSoup():
     """docstring for getSoup"""
