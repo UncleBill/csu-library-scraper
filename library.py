@@ -7,15 +7,16 @@ import sqlite3
 import time
 
 from getSoup import getSoup
+from book_parser import parser
 import data
 
 __INFO__ = 0
 __STORE__ = 1
-__STEP__ = 10000
+__STEP__ = 20000
 __CHUNK__ = 50
 
 class library:
-    """docstring for library"""
+    """library class"""
     def __init__(self, database = 'library.db'):
         self.database = database
         self.key_rec = 'recno'
@@ -80,7 +81,7 @@ class library:
             return
         self.commit2db()
         l = len( _bl )
-        print '>>commit!(',l,'books )'
+        print '>>commit!(',l,'books )',
         self.state()
         print 'since last time', time.time() - self.last_time,'s'
 
@@ -106,64 +107,10 @@ class library:
         _con.commit()
         self.booklist = [ [], [] ]      # rempty booklist
 
-    def nobook(self,a,b):
-        print a,b
-    def basic_parser(self, soupJar):
-        soup = soupJar[0]
-        num = soupJar[1]
-        info_jar = soup.findAll('div','info')
-        info = {}
-        if len( info_jar ) < 2: # book doesn't exist
-            #self.nobook( num, 'There is not this book.Set to None' )
-            kl = self.info_entries
-            for k in kl:
-                info[k] = u''
-            info[u'书名'] = u'No existing!'
-            info[u'RECNO'] = num
-            return info
-
-        info[u'书名'] = info_jar[1].h1.a.text
-        lst = soup.fetch('ul','list')       # get details of book's info
-        lst = lst[0]
-        details = lst.findAll('li')
-        for item in details:
-            t = item.span.next
-            name =  str( t ).decode('utf-8')
-            t = t.next
-            if name == u'作者':t = t.next
-            value = str( t )
-            info[name] = value.decode('utf-8')
-        info[u'RECNO'] = num
-        return info
-
-    def storeparser(self, soupJar):
-        soup = soupJar[0]
-        num = soupJar[1]
-        tbody = soup.fetch( 'tbody' )
-        store = {}
-        store_list = []
-        if len( tbody ) > 1 or len(tbody) < 1:
-            print '!alert: not just a table'
-            return None
-        trs = tbody[0].fetch('tr')
-        if len( trs ) == 0:     # when no store info.
-            for i in range(10):
-                store[ self.store_entries[i] ] = 'Empty Info'
-            store['RECNO'] = num
-            store_list.append( store )
-            return store_list
-        for tr in trs:          # save in a store info. list
-            tds = tr.fetch('td')
-            for i in range(10):
-                store[ self.store_entries[i] ] = tds[i].next
-            store['RECNO'] = num
-            store_list.append( store)
-        return store_list
-
     def state(self):
-        print 'total commit:',self.total['commit']
+        print time.ctime()
+        print 'total commit:',self.total['commit'],
         print 'total failed:',self.total['fail']
-        print '-'*35
 
     def start(self):
         size = len( self.region )
@@ -172,13 +119,22 @@ class library:
             seed = self.region[i]
             _soupJar = getSoup(seed).soupJar
             if not _soupJar:
-                # handle error page
+                # TODO handle error page
+                #for i in basic_entires:
+                    #info[i] = 'FAIL_PAGE'
+                #for i in store_entries:
+                    #store[i] = 'FAIL_PAGE'
+
+                #store[u'RECNO'] = info[u'RECNO'] = seed
+                #self.booklist[__INFO__].append(info)
+                #self.booklist[__STORE__].append([store])
+
                 self.total['fail'] += 1
-                continue
-            info = self.basic_parser(_soupJar)
-            store = self.storeparser(_soupJar)
-            self.booklist[__INFO__].append(info)
-            self.booklist[__STORE__].append(store)
+            else:
+                info = parser.basic_parser(_soupJar)
+                store = parser.store_parser(_soupJar)
+                self.booklist[__INFO__].append(info)
+                self.booklist[__STORE__].append(store)
             if i % __CHUNK__ == 0:
                 self.commit()
         self.state()
