@@ -30,11 +30,12 @@ create table bookInfos (
     alt_time    date
 );
 --a trigger adding inserting time
-create trigger add_time after
-insert on bookInfos
-begin
-    insert into bookInfos ( commit_time ) values ( date('now') );
-end;
+--remove!
+--create trigger add_time after
+--insert on bookInfos
+--begin
+    --insert into bookInfos ( commit_time ) values ( datetime('now') );
+--end;
 
 --create trigger update_time after
 --update on books
