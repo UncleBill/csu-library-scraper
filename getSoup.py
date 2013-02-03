@@ -3,6 +3,8 @@
 import urllib2
 import BeautifulSoup as bs
 
+__TRY__ = 10
+
 class getSoup():
     """docstring for getSoup"""
     def __init__(self, num):
@@ -14,12 +16,15 @@ class getSoup():
     def curl(self):
         attempts = 0
         page = False
-        while attempts < 10:
+        while attempts < __TRY__:
             try:
                 page = urllib2.urlopen(self.url)
                 break
             except:
                 attempts += 1
+        #if attempts == __TRY__ - 1:
+            #print 'overtry'
+        print attempts,
         return page
 
     def getSoup(self):
