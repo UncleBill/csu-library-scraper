@@ -3,7 +3,7 @@
 import urllib2
 import BeautifulSoup as bs
 
-__TRY__ = 4
+__TRY__ = 3
 
 class getSoup():
     """docstring for getSoup"""
@@ -54,7 +54,7 @@ class getSoup2(getSoup):
         page = False
         while attempts < __TRY__:
             try:
-                page = urllib2.urlopen(self.url,timeout=10)
+                page = urllib2.urlopen(self.url,timeout=180)
                 break
             except:
                 attempts += 1
