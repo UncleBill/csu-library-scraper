@@ -5,19 +5,22 @@
 """
 import sqlite3
 import time
+from time import sleep
 
+import data
 from getSoup import getSoup
 from book_parser import parser
-import data
 
+__DATABASE__ = 'library.db'
 __INFO__ = 0
 __STORE__ = 1
-__STEP__ = 5000
-__CHUNK__ = 50
+__STEP__ = 100000
+__CHUNK__ = 200
+__FIX_FAIL__ = False
 
 class library:
     """library class"""
-    def __init__(self, database = 'library.db'):
+    def __init__(self, database = __DATABASE__):
         self.database = database
         self.key_rec = 'recno'
         self.db_con = sqlite3.connect(self.database)
@@ -35,7 +38,8 @@ class library:
 
     def gen_region(self):
         _max = self.get_max_rec( self.db_con ) + 1
-        region = self.fail_list()
+        #region = self.fail_list()
+        region = []     # ignore fail items
         region.sort()
         ext = range( _max, _max + __STEP__, 1 )
         region.extend(ext)
@@ -79,11 +83,20 @@ class library:
         self.total['commit'] += len( _bl )
         if len( _bl ) == 0:
             return
-        self.commit2db()
+        atte = 0
+        while atte < 3:
+            try:
+                self.commit2db()
+                break
+            except:
+                print 'sleep .5s',
+                sleep(0.5)
+                atte += 1
         l = len( _bl )
-        print '>>commit!(',l,'books )',
+        print '>>',l,'<<',
         self.state()
-        print 'since last time', time.time() - self.last_time,'s'
+        spend = time.time() - self.last_time
+        print 'since',str(spend)[:6],'s',
 
         self.last_time = time.time()
 
@@ -108,9 +121,9 @@ class library:
         self.booklist = [ [], [] ]      # rempty booklist
 
     def state(self):
-        print time.ctime()
-        print 'total commit:',self.total['commit'],
-        print 'total failed:',self.total['fail']
+        print time.ctime()[10:-4]
+        print 'committed:',self.total['commit'],
+        print 'failed:',self.total['fail'],
 
     def start(self):
         size = len( self.region )
@@ -121,17 +134,17 @@ class library:
             if not _soupJar:
                 info, store = {}, {}
                 # TODO handle error page
-                #for _i in self.info_entries:
-                    #info[_i] = 'FAIL_PAGE'
-                #for _i in self.store_entries:
-                    #store[_i] = 'FAIL_PAGE'
+                if __FIX_FAIL__:
+                    for _i in self.info_entries:
+                        info[_i] = 'FAIL_PAGE'
+                    for _i in self.store_entries:
+                        store[_i] = 'FAIL_PAGE'
 
-                #store[u'RECNO'] = info[u'RECNO'] = seed
-                #self.booklist[__INFO__].append(info)
-                #self.booklist[__STORE__].append([store])
+                    store[u'RECNO'] = info[u'RECNO'] = seed
+                    self.booklist[__INFO__].append(info)
+                    self.booklist[__STORE__].append([store])
 
                 self.total['fail'] += 1
-                continue
             else:
                 info = parser().basic_parser(_soupJar)
                 store = parser().store_parser(_soupJar)
@@ -140,10 +153,11 @@ class library:
             if i % __CHUNK__ == 0:
                 self.commit()
         self.state()
+        self.commit()
 
 def main():
     beg = time.time()
-    print time.ctime(),beg
+    print time.ctime()
     library().start()
     print time.ctime()
     print 'use time:',time.time() - beg
