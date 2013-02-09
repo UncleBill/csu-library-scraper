@@ -1,3 +1,5 @@
+.mode tabs
+.width 20
 .nullvalue 'NULL'
 select 'how many books?';
 select count(*) from books;
