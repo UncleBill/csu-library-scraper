@@ -52,15 +52,16 @@ class library:
             return
         atte = 0
         print 'c',
-        #while atte < 3:
-            #try:
-                #self.commit2db()
-                #break
-            #except:
-                #print 'sleep .5s',
-                #sleep(0.5)
-                #atte += 1
-        self.commit2db()
+        while atte < 3:
+            try:
+                self.commit2db()
+                break
+            except:
+                print 'sleep .5s',
+                sleep(0.5)
+                atte += 1
+        if atte == 3:
+            self.commit2db()
         self.state()
 
     def commit2db(self):
@@ -91,7 +92,7 @@ class library:
 
     def start(self):
         p = self.from_page() or 0
-        print '----------------',p,'----------------'
+        print '-'*10,p,'-'*10
 
         #for i in range(__THREAD_NUM__):
             #th = Thread( target = self.worker )
