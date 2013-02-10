@@ -52,6 +52,7 @@ class getSoup2(getSoup):
     def curl(self):
         attempts = 0
         page = False
+        #page = urllib2.urlopen(self.url,timeout=180)
         while attempts < __TRY__:
             try:
                 page = urllib2.urlopen(self.url,timeout=180)
