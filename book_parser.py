@@ -96,6 +96,6 @@ class newParser():
             book['ISBN'] = isbn
             book['RECNO'] = recno
             book[u'书名'] = name
-            book[u'which_page'] = num
+            book[u'which_page'] = 0 - num
             booklist.append(book)
         return booklist
