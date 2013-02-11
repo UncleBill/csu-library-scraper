@@ -45,7 +45,7 @@ class getSoup2(getSoup):
     """getSoup for newLibrary"""
     def __init__(self,num):
         self.num = num
-        self.base = 'http://opac.its.csu.edu.cn/NTRdrBookRetr.aspx?strType=text&strKeyValue=*&strpageNum=100&strSort=desc&page='
+        self.base = 'http://opac.its.csu.edu.cn/NTRdrBookRetr.aspx?strType=text&strKeyValue=*&strpageNum=100&strSort=asc&page='
         self.url = self.base + str(num)
         self.soupJar = self.getSoup()
 
