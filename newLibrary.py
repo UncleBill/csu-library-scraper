@@ -5,7 +5,6 @@
 """
 import sqlite3
 import time
-from time import sleep
 
 from threading import Thread
 from Queue import Queue
@@ -17,7 +16,7 @@ from book_parser import newParser
 __DATABASE__ = 'library.new.db'
 __INFO__ = 0
 __STORE__ = 1
-__PAGES__ = 5992
+__PAGES__ = 5992 - 5239
 __CHUNK__ = 100         # 100 books per page
 __THREAD_NUM__ = 4
 __FIX_FAIL__ = False
@@ -58,7 +57,7 @@ class library:
                 break
             except:
                 print 'sleep .5s',
-                sleep(0.5)
+                time.sleep(0.5)
                 atte += 1
         if atte == 3:
             self.commit2db()
@@ -91,7 +90,7 @@ class library:
             #self.commit()
 
     def start(self):
-        p = self.from_page() or 0
+        p = self.from_page() - 5241 #or 0
         print '-'*10,p,'-'*10
 
         #for i in range(__THREAD_NUM__):
