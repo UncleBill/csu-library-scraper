@@ -11,7 +11,8 @@ create table books (
     pages       integer,
     pubdate     text,
     recno       integer,
-    which_page  integer
+    which_page  integer,
+    commit_time text
 );
 --table bookInfos
 --create table bookInfos (
