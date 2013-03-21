@@ -1,0 +1,51 @@
+$def with( data,rg )
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <style type="text/css">
+            .even{
+                background:#afa;
+            }
+            td{
+                font-size:14px;
+                text-align: center;
+            }
+            table{
+                margin:0 auto;
+            }
+        </style>
+        <title>library</title>
+    </head>
+<body>
+<div id="list">
+    <table border="1">
+        <tr>
+            <td>序号</td>
+            <td>书名</td>
+            <td>作者</td>
+            <td>价格</td>
+            <td>出版商</td>
+            <td>索书号</td>
+            <td>ISBN</td>
+            <td>分类号</td>
+            <td>页数</td>
+            <td>出版日期</td>
+            <td>记录号</td>
+            <td>提交日期</td>
+            <td>页号</td>
+        </tr>
+        $for i in range( len( data ) ):
+            $if i%2 == 0:
+                <tr class="odd">
+            $else:
+                <tr class="even">
+            $for item in data[i][:-1]:
+                <td>$item</td>
+            <td><a href="http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno=$data[i][-1]">$data[i][-1]</a></td>
+            </tr>
+    </table>
+    <a class="next" href="/all?start=${rg[1]}">next ${rg[1] - rg[0]}</a>
+</div>
+</body>
+</html>
