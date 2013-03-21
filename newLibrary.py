@@ -6,9 +6,6 @@
 import sqlite3
 import time
 
-from threading import Thread
-from Queue import Queue
-
 import data
 from getSoup import getSoup2
 from book_parser import newParser
@@ -16,9 +13,8 @@ from book_parser import newParser
 __DATABASE__ = 'library.new.db'
 __INFO__ = 0
 __STORE__ = 1
-__PAGES__ = 5992 - 5239
+__PAGES__ = 5992        # total pages
 __CHUNK__ = 100         # 100 books per page
-__THREAD_NUM__ = 4
 __FIX_FAIL__ = False
 
 class library:
@@ -77,44 +73,26 @@ class library:
 
     def state(self):
         print 'commit:',self.total['commit'],
-        #print 'fail:',self.total['fail'],
         spend = time.time() - self.beg_time
         print 'use',spend,'s',
         print time.ctime()[10:-4]
 
-    #def worker(self):
-        #while True:
-            #_soup = self.job_quenue.get()
-            #_bklist = newParser().info_parser(_soup)
-            #self.booklist.extend(_bklist)
-            #self.commit()
-
     def start(self):
-        p = self.from_page() - 5241 #or 0
+        p = self.from_page()
         print '-'*10,p,'-'*10
-
-        #for i in range(__THREAD_NUM__):
-            #th = Thread( target = self.worker )
-            #th.setDaemon(True)
-            #th.start()
 
         for page in range(p,__PAGES__,1):
             soupJar = getSoup2(page).soupJar
             if not soupJar:
                 print 'stop',page
                 break
-            #self.job_quenue.put(soup)
-            #if page % __THREAD_NUM__ == 0:
-                #self.commit()
             self.booklist = newParser().info_parser(soupJar)
             self.commit()
-        #self.commit()
 
 def main():
     beg = time.time()
     print time.ctime()
-    # start
-    library().start()
+    library().start()   #<-- start
     print time.ctime()
     print 'use time:',time.time() - beg
 

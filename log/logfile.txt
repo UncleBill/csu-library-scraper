@@ -1,1 +1,0 @@
-Mon Jan 21 23:36:04 2013<class 'urllib2.HTTPError'>Mon Jan 21 23:36:04 2013
