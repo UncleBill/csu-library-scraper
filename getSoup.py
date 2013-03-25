@@ -53,7 +53,7 @@ class getSoup2(getSoup):
         attempts = 0
         page = False
         #page = urllib2.urlopen(self.url,timeout=180)
-        while attempts < __TRY__:
+        while attempts < __TRY__:       # try $__TRY__ times
             try:
                 page = urllib2.urlopen(self.url,timeout=180)
                 break
