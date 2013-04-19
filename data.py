@@ -1,5 +1,33 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+"""
+key argument config
+and query script
+"""
+database = "library.test.db"
+chunk = 8000         # number of books per page
+pages = 73         # total pages
+is_fix_fail = False
+
+table_script = """
+create table if not exists books (
+    id integer primary key,
+    bookname    text,
+    author      text,
+    price       text,
+    publisher   text,
+    callnum     text,
+    isbn        text,
+    sortnum     text,
+    pages       integer,
+    pubdate     text,
+    recno       integer,
+    which_page  integer,
+    commit_time text
+);
+"""
+
 info_entries = [ u'书名',
     u'作者'
     ,u'价格'
@@ -25,29 +53,11 @@ info_script = u"""insert into books (
     ,recno
     ,which_page
     ,commit_time) values ( ?,?,?,?,?,?,?,?,?,?,?,datetime('now') )"""
-# ########################################
-store_entries = [
-    u'索书号'
-    ,u'条形码'
-    ,u'登录号'
-    ,u'馆藏地点'
-    ,u'管藏状态'
-    ,u'借出日期'
-    ,u'还回日期'
-    ,u'流通类型'
-    ,u'预约处理'
-    ,u'卷册说明'
-    ,u'RECNO']
-store_script = """insert into bookInfos (
-    ,commit_time
-    ,call_num
-    ,bar_code
-    ,login_num
-    ,store_loca
-    ,store_state
-    ,lend_date
-    ,return_date
-    ,tran_type
-    ,order_handle
-    ,volumn_info
-    ,recno) values ( datetime('now'), ?,?,?,?,?,?,?,?,?,?,? )"""
+
+#=====================================================================
+
+# ascending order
+# descending order
+# descending is default by library site
+__ORDER__ = 0
+urlbase = 'http://opac.its.csu.edu.cn/NTRdrBookRetr.aspx?strType=text&strKeyValue=*&strpageNum=%s&strSort=%s&page=' % ( chunk,[ 'desc','asc' ][__ORDER__] )
