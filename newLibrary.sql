@@ -1,5 +1,5 @@
 --table books
-create table books (
+create table if not exists books (
     id integer primary key,
     bookname    text,
     author      text,
