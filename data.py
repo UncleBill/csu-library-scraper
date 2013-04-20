@@ -6,8 +6,9 @@ key argument config
 and query script
 """
 database = "library.test.db"
-chunk = 8000         # number of books per page
-pages = 73         # total pages
+total = 580215.0      #total books
+chunk = 10000         # number of books per page
+pages = int( round( total / chunk ) )         # total pages
 is_fix_fail = False
 
 table_script = """
