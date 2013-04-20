@@ -6,66 +6,77 @@
 import sqlite3
 import time
 
-from threading import Thread
-from Queue import Queue
-
 import data
-from getSoup import getSoup2
-from book_parser import newParser
+from book_parser import bookParser
 
-__DATABASE__ = 'library.new.db'
-__INFO__ = 0
-__STORE__ = 1
-__PAGES__ = 5992 - 5239
-__CHUNK__ = 100         # 100 books per page
-__THREAD_NUM__ = 4
-__FIX_FAIL__ = False
+__DATABASE__ = data.database
+__CHUNK__ = data.chunk      # number of books per page
+__PAGES__ = data.pages      # total pages
+__FIX_FAIL__ = data.is_fix_fail
 
 class library:
-    """library class"""
+    """
+    library class
+    =============
+    library( string database ): to initialize.
+    from_page( self ):genrate first page to fetch
+    """
+
     def __init__(self, database = __DATABASE__):
         self.database = database
         self.db_con = sqlite3.connect(self.database)
+        self.db_con.execute( data.table_script )
+
         self.beg_time = time.time()
-        self.total = {'commit':0,'fail':0}
-        self.booklist = []
+        self.total = {'commit':0,'fail':0}      # record commit/fail
+        self.booklist = []                      # list to store book entries
 
         self.info_entries = data.info_entries
         self.info_script = data.info_script
 
-        self.job_quenue = Queue()
-
-    def empty_booklist(self):
+    def _empty_booklist(self):
+        """
+        set self.booklist empty to release memory
+        """
         self.booklist = []
 
     def from_page(self):
+        """
+        genrate the first page to fetch
+        """
         _script = 'select count(*) from books'
         _count = self.db_con.execute( _script ).fetchone()[0]
         _page = _count / __CHUNK__ + 1
         return _page
 
     def commit(self):
+        """
+        committing queue
+        """
         _bl = self.booklist
         self.total['commit'] += len( _bl )
         if len( _bl ) == 0:
             return
         atte = 0
         print 'c',
-        while atte < 3:
+        while atte < 3:     # try 3 times
             try:
                 self.commit2db()
                 break
             except:
-                print 'sleep .5s',
-                time.sleep(0.5)
+                print 'sleep .2s',      # pause .2s
+                time.sleep(0.2)
                 atte += 1
         if atte == 3:
             self.commit2db()
-        self.state()
+        self.status()
 
     def commit2db(self):
+        """
+        commit to database
+        """
         _con = self.db_con
-        # insert basic info
+        # commit basic info
         for book in self.booklist:
             if not book:
                 continue
@@ -73,48 +84,38 @@ class library:
             _con.execute( self.info_script ,keys_tuple )
 
         _con.commit()
-        self.empty_booklist()
+        self._empty_booklist()
 
-    def state(self):
+    def status(self):
+        """
+        print commit status
+        """
         print 'commit:',self.total['commit'],
-        #print 'fail:',self.total['fail'],
         spend = time.time() - self.beg_time
         print 'use',spend,'s',
         print time.ctime()[10:-4]
 
-    #def worker(self):
-        #while True:
-            #_soup = self.job_quenue.get()
-            #_bklist = newParser().info_parser(_soup)
-            #self.booklist.extend(_bklist)
-            #self.commit()
-
     def start(self):
-        p = self.from_page() - 5241 #or 0
+        """
+        begin to craw
+        """
+        p = self.from_page()
         print '-'*10,p,'-'*10
-
-        #for i in range(__THREAD_NUM__):
-            #th = Thread( target = self.worker )
-            #th.setDaemon(True)
-            #th.start()
+        print __CHUNK__, 'per page'
 
         for page in range(p,__PAGES__,1):
-            soupJar = getSoup2(page).soupJar
-            if not soupJar:
-                print 'stop',page
-                break
-            #self.job_quenue.put(soup)
-            #if page % __THREAD_NUM__ == 0:
-                #self.commit()
-            self.booklist = newParser().info_parser(soupJar)
+            self.booklist = bookParser( page ) # for parser3
             self.commit()
-        #self.commit()
+
+    # / library
 
 def main():
-    beg = time.time()
+    """
+    let's go
+    """
+    beg = time.time()   #<-- time counting
     print time.ctime()
-    # start
-    library().start()
+    library().start()   #<-- start
     print time.ctime()
     print 'use time:',time.time() - beg
 
