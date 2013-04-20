@@ -2,11 +2,16 @@
 # -*- coding: utf-8 -*-
 import urllib2
 import BeautifulSoup as bs
+import time
+
+from data import urlbase
 
 __TRY__ = 3
 
 class getSoup():
-    """docstring for getSoup"""
+    """
+    docstring for getSoup
+    """
     def __init__(self, num):
         self.base = 'http://opac.its.csu.edu.cn/NTRdrBookRetrInfo.aspx?BookRecno='
         self.num = num
@@ -42,10 +47,12 @@ class getSoup():
             return None
 
 class getSoup2(getSoup):
-    """getSoup for newLibrary"""
+    """
+    getSoup for newLibrary
+    """
     def __init__(self,num):
         self.num = num
-        self.base = 'http://opac.its.csu.edu.cn/NTRdrBookRetr.aspx?strType=text&strKeyValue=*&strpageNum=100&strSort=asc&page='
+        self.base = urlbase
         self.url = self.base + str(num)
         self.soupJar = self.getSoup()
 
@@ -65,6 +72,8 @@ class getSoup2(getSoup):
             print '#',
         else:
             print attempts,
+        print 'fetching success',
+        print time.ctime()[10:-4]
         return page
 
     def getSoup(self):
@@ -72,8 +81,18 @@ class getSoup2(getSoup):
         if not page:
             return None
         try:
+            print 'turning to soup',time.ctime()
             soup = bs.BeautifulSoup( page )
+            print 'get soup',time.ctime()
             return [soup,self.num]
         except:
             print 'type error'
             return None
+
+class gethtml(getSoup2):
+    """
+    get html object
+    use xml for parse
+    """
+    def __init__(self):
+        super(gethtml, self).__init__()
