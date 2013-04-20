@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import data
+import time
+import lxml.html as html
+import urllib2
 
 class parser():
     """basic parser and info parser"""
+
     def __init__(self):
         self.info_entries = data.info_entries
         self.store_entries = data.store_entries
@@ -68,6 +72,7 @@ class newParser():
         self.info_entries = data.info_entries
 
     def info_parser(self,soupJar):
+        print 'start parse',time.ctime()
         soup = soupJar[0]
         num = soupJar[1]
         booklist = []
@@ -98,4 +103,54 @@ class newParser():
             book[u'书名'] = name
             book[u'which_page'] = 0 - num
             booklist.append(book)
+
+        print 'parsing success',time.ctime()
         return booklist
+
+class parser3():
+    """
+    new parser use lxml
+    for performence,use lxml
+    """
+
+    def __init__(self):
+        self.info_entries = data.info_entries
+
+    def info_parser(self,page_num):
+        print 'start parse',time.ctime()
+        url = data.urlbase + str( page_num )
+        page = urllib2.urlopen( url ).read().decode('utf-8')        # decoding is required
+        #page = html.parse( url )
+        #print page.docinfo.encoding
+        #page = page.getroot()
+        page = html.fromstring( page )
+        booklist = []
+        result_list = page.cssselect('ul.resultlist')
+        for result in result_list:
+            book = {}
+            #isbn
+            isbn_con = result.cssselect("#Cbox")
+            if isbn_con:
+                isbn = isbn_con[0].attrib['value']
+            else:
+                isbn = '0'
+            recno_con = result.cssselect("#StrTmpRecno")
+            recno = recno_con[0].attrib['value']
+            # book name
+            name = result.cssselect('h3.title a')[0].text
+            # other
+            detail_spans = result.cssselect("span")[:-5]    # ignore the final five item
+            for span in detail_spans:
+                k = span.text[:-1]
+                v = span.getchildren()[0].text
+                book[k] = v
+            book['ISBN'] = isbn
+            book['RECNO'] = recno
+            book[u'书名'] = name
+            book[u'which_page'] = 0 - page_num
+            booklist.append(book)
+
+        print 'parsing success',time.ctime()
+        return booklist
+
+bookParser = parser3().info_parser     # interface
