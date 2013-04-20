@@ -7,15 +7,12 @@ import sqlite3
 import time
 
 import data
-from getSoup import getSoup2
-from book_parser import newParser
+from book_parser import bookParser
 
-__DATABASE__ = 'library.new.db'
-__INFO__ = 0
-__STORE__ = 1
-__CHUNK__ = 100         # 100 books per page
-__PAGES__ = 5992        # total pages
-__FIX_FAIL__ = False
+__DATABASE__ = data.database
+__CHUNK__ = data.chunk      # number of books per page
+__PAGES__ = data.pages      # total pages
+__FIX_FAIL__ = data.is_fix_fail
 
 class library:
     """
@@ -28,6 +25,8 @@ class library:
     def __init__(self, database = __DATABASE__):
         self.database = database
         self.db_con = sqlite3.connect(self.database)
+        self.db_con.execute( data.table_script )
+
         self.beg_time = time.time()
         self.total = {'commit':0,'fail':0}      # record commit/fail
         self.booklist = []                      # list to store book entries
@@ -102,13 +101,10 @@ class library:
         """
         p = self.from_page()
         print '-'*10,p,'-'*10
+        print __CHUNK__, 'per page'
 
         for page in range(p,__PAGES__,1):
-            soupJar = getSoup2(page).soupJar
-            if not soupJar:
-                print 'stop',page
-                break
-            self.booklist = newParser().info_parser(soupJar)
+            self.booklist = bookParser( page ) # for parser3
             self.commit()
 
     # / library
